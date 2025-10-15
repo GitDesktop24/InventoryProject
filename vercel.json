@@ -1,0 +1,18 @@
+{
+  "rewrites": [
+    {
+      "source": "/:path((?!static).*)",
+      "destination": "/"
+    }
+  ],
+
+  "routes": [
+    {
+      "handle": "filesystem"
+    },
+    {
+      "src": "/.*",
+      "dest": "/index.html"
+    }
+  ]
+}
