@@ -12,8 +12,7 @@ const UserDashboardContent = () => {
     const fetchData = useCallback(async () => {
         const { data, error } = await supabase
             .from('inventory')
-            // Fetch necessary data but NOT the 'id' since no editing is allowed
-            .select('brand, description, quantity, price, date_of_import');
+            .select('brand, description, quantity, price, price_per_pack, date_of_import');
 
         if (error) {
             console.error("Error fetching inventory:", error);
@@ -44,10 +43,10 @@ const UserDashboardContent = () => {
     // Render Table Rows 
     const renderTableRows = () => {
         if (loading && inventory.length === 0) {
-            return <tr><td colSpan="5" style={styles.loadingCell}>Loading inventory...</td></tr>;
+            return <tr><td colSpan="6" style={styles.loadingCell}>Loading inventory...</td></tr>;
         }
         if (filteredInventory.length === 0) {
-            return <tr><td colSpan="5" style={styles.loadingCell}>No inventory items found.</td></tr>;
+            return <tr><td colSpan="6" style={styles.loadingCell}>No inventory items found.</td></tr>;
         }
 
         return filteredInventory.map((item, index) => (
@@ -55,7 +54,12 @@ const UserDashboardContent = () => {
                 <td style={styles.tableCell}>{item.brand}</td>
                 <td style={styles.tableCell}>{item.description}</td>
                 <td style={styles.tableCell}>{item.quantity}</td>
-                <td style={styles.tableCell}>₱{parseFloat(item.price).toFixed(2)}</td>
+                <td style={styles.tableCell}>
+                    {item.price ? `₱${parseFloat(item.price).toFixed(2)}` : 'N/A'}
+                </td>
+                <td style={styles.tableCell}>
+                    {item.price_per_pack ? `₱${parseFloat(item.price_per_pack).toFixed(2)}` : 'N/A'}
+                </td>
                 <td style={styles.tableCell}>{new Date(item.date_of_import).toLocaleDateString()}</td>
             </tr>
         ));
@@ -84,7 +88,8 @@ const UserDashboardContent = () => {
                             <th style={styles.tableHeader}>Brand</th>
                             <th style={styles.tableHeader}>Description</th>
                             <th style={styles.tableHeader}>Quantity</th>
-                            <th style={styles.tableHeader}>Price</th>
+                            <th style={styles.tableHeader}>Price (Unit)</th>
+                            <th style={styles.tableHeader}>Price (Pack)</th>
                             <th style={styles.tableHeader}>Date of Import</th>
                         </tr>
                     </thead>
@@ -133,9 +138,9 @@ const styles = {
         borderCollapse: 'collapse',
         textAlign: 'left',
         
-        // Dynamic min-width for mobile scroll (fewer columns means less min-width needed)
+        // UPDATED: Increased min-width for mobile scroll (6 columns total now)
         '@media (max-width: 768px)': { 
-            minWidth: '550px', 
+            minWidth: '650px', 
         },
         '@media (min-width: 769px)': {
             minWidth: '100%',

@@ -9,6 +9,7 @@ const StockInContent = ({ onImportSuccess }) => {
         description: '',
         quantity: 0,
         price: 0.00,
+        price_per_pack: 0.00, 
         date_of_import: new Date().toISOString().substring(0, 10),
     });
     const [message, setMessage] = useState({ type: '', text: '' });
@@ -25,29 +26,47 @@ const StockInContent = ({ onImportSuccess }) => {
         setLoading(true);
 
         const newQuantity = parseInt(formData.quantity);
-        const newPrice = parseFloat(formData.price);
+        
+        // Handle optional prices: convert 0 or NaN to null for the database
+        let newPrice = parseFloat(formData.price);
+        if (isNaN(newPrice) || newPrice <= 0) {
+            newPrice = null;
+        }
+
+        let newPricePerPack = parseFloat(formData.price_per_pack);
+        if (isNaN(newPricePerPack) || newPricePerPack <= 0) {
+            newPricePerPack = null;
+        }
+
         const importDate = formData.date_of_import;
         
-        if (newQuantity <= 0 || isNaN(newPrice) || newPrice <= 0) {
-            setMessage({ type: 'error', text: 'Quantity and Price must be greater than zero.' });
+        // CRITICAL VALIDATION: Quantity must be > 0 AND at least ONE price must be set.
+        if (newQuantity <= 0) {
+            setMessage({ type: 'error', text: 'Quantity must be greater than zero.' });
             setLoading(false);
             return;
         }
-
+        if (newPrice === null && newPricePerPack === null) {
+            setMessage({ type: 'error', text: 'You must provide a Price (per unit) or a Price (per pack).' });
+            setLoading(false);
+            return;
+        }
+        
         try {
-            // 1. Search for existing item with matching Brand, Description, and Price
+            // 1. Search for existing item with matching Brand, Description, and Price (Unit Price)
+            // Only search for a match if unit price is provided (null price won't match/merge)
             const { data: existingItems, error: searchError } = await supabase
                 .from('inventory')
                 .select('id, quantity')
                 .eq('brand', formData.brand)
                 .eq('description', formData.description)
-                .eq('price', newPrice) // Price is now part of the matching criteria
+                .eq('price', newPrice) 
                 .limit(1);
 
             if (searchError) throw searchError;
 
-            if (existingItems && existingItems.length > 0) {
-                // --- 2. UPDATE LOGIC (Merge if item exists) ---
+            if (existingItems && existingItems.length > 0 && newPrice !== null) {
+                // --- 2. UPDATE LOGIC (Merge if item exists AND unit price is set) ---
                 const existingItem = existingItems[0];
                 const updatedQuantity = existingItem.quantity + newQuantity;
 
@@ -55,7 +74,8 @@ const StockInContent = ({ onImportSuccess }) => {
                     .from('inventory')
                     .update({ 
                         quantity: updatedQuantity,
-                        date_of_import: importDate, // Update date to the current import date
+                        date_of_import: importDate, 
+                        price_per_pack: newPricePerPack, 
                     })
                     .eq('id', existingItem.id);
 
@@ -63,14 +83,15 @@ const StockInContent = ({ onImportSuccess }) => {
 
                 setMessage({ type: 'success', text: `Stock merged successfully! New quantity: ${updatedQuantity}` });
             } else {
-                // --- 3. INSERT LOGIC (If no match found) ---
+                // --- 3. INSERT LOGIC (If no match found OR if unit price is null) ---
                 const { error: insertError } = await supabase
                     .from('inventory')
                     .insert([{
                         brand: formData.brand,
                         description: formData.description,
                         quantity: newQuantity,
-                        price: newPrice,
+                        price: newPrice, 
+                        price_per_pack: newPricePerPack, 
                         date_of_import: importDate,
                     }]);
                 
@@ -85,10 +106,10 @@ const StockInContent = ({ onImportSuccess }) => {
                 description: '',
                 quantity: 0,
                 price: 0.00,
+                price_per_pack: 0.00, 
                 date_of_import: new Date().toISOString().substring(0, 10),
             });
             
-            // Redirect to Dashboard
             if (onImportSuccess) {
                 onImportSuccess(); 
             }
@@ -122,8 +143,33 @@ const StockInContent = ({ onImportSuccess }) => {
                 </div>
 
                 <div style={styles.inputGroup}>
-                    <label style={styles.label}>Price (per unit)</label>
-                    <input type="number" name="price" value={formData.price} onChange={handleChange} required min="0.01" step="0.01" style={styles.input} disabled={loading} />
+                    <label style={styles.label}>Price (per unit) - Optional</label>
+                    <input 
+                        type="number" 
+                        name="price" 
+                        value={formData.price} 
+                        onChange={handleChange} 
+                        min="0" 
+                        step="0.01" 
+                        style={styles.input} 
+                        disabled={loading} 
+                        placeholder="Leave blank or 0 if N/A"
+                    />
+                </div>
+
+                <div style={styles.inputGroup}>
+                    <label style={styles.label}>Price (per pack) - Optional</label>
+                    <input 
+                        type="number" 
+                        name="price_per_pack" 
+                        value={formData.price_per_pack} 
+                        onChange={handleChange} 
+                        min="0" 
+                        step="0.01" 
+                        style={styles.input} 
+                        disabled={loading} 
+                        placeholder="Leave blank or 0 if N/A"
+                    />
                 </div>
 
                 <div style={styles.inputGroup}>

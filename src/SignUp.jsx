@@ -1,6 +1,6 @@
 // src/SignUp.jsx
 
-import { useState } from 'react'; // 👈 REMOVED useEffect
+import { useState } from 'react';
 import { supabase } from './supabaseClient'; 
 import { Link, useNavigate } from 'react-router-dom';
 
@@ -16,8 +16,7 @@ function SignUp() {
   
   const navigate = useNavigate();
 
-  // --- NAVIGATION GUARD LOGIC REMOVED ---
-  // The logic is now in AuthGuard.jsx
+  // --- LOGIC (UNCHANGED) ---
   
   const handleSignUp = async (e) => {
     e.preventDefault();
@@ -173,37 +172,58 @@ function SignUp() {
   );
 }
 
-// Styles (UNCHANGED)
+// UPDATED STYLES FOR DARK GLASSPMORPHISM + MESH TEXTURE
 const styles = {
     container: {
         maxWidth: '400px',
-        margin: '50px auto',
-        padding: '20px',
-        border: '1px solid #ccc',
-        borderRadius: '8px',
-        boxShadow: '0 4px 8px rgba(0,0,0,0.1)',
-        backgroundColor: '#fff',
+        margin: '50px auto', 
+        padding: '30px', 
+        borderRadius: '16px', 
+        // Glassmorphism effects - DARK
+        backgroundColor: 'rgba(0, 0, 0, 0.4)', // Dark transparent background
+        border: '1px solid rgba(255, 255, 255, 0.5)', // Light border
+        backdropFilter: 'blur(10px)', 
+        boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.6)', // Darker shadow
+        
+        // Mesh Texture (Subtle white grid on dark card)
+        backgroundImage: `
+            repeating-linear-gradient(0deg, rgba(255,255,255,0.1) 0px, rgba(255,255,255,0.1) 1px, transparent 1px, transparent 10px),
+            repeating-linear-gradient(90deg, rgba(255,255,255,0.1) 0px, rgba(255,255,255,0.1) 1px, transparent 1px, transparent 10px)
+        `,
+        backgroundSize: '10px 10px', 
     },
     header: {
         textAlign: 'center',
-        color: '#333',
+        color: '#ffffff', // White header
+        marginBottom: '20px',
+        fontSize: '1.8em',
+        textShadow: '0 1px 3px rgba(0,0,0,0.4)', 
     },
     form: {
         display: 'flex',
         flexDirection: 'column',
     },
     label: {
-        marginBottom: '5px',
-        fontWeight: 'bold',
-        color: '#555',
-        marginTop: '10px',
+        marginBottom: '8px',
+        fontWeight: '600', 
+        color: '#f8f9fa', // Light gray label
+        marginTop: '15px',
+        fontSize: '0.9em',
+        textShadow: '0 1px 2px rgba(0,0,0,0.3)',
     },
+    // Standard Input Field Style (adjusted for dark card)
     standardInput: { 
-        padding: '10px',
+        padding: '12px', 
         marginBottom: '15px',
-        border: '1px solid #ddd',
-        borderRadius: '4px',
+        border: '1px solid rgba(255, 255, 255, 0.5)', 
+        borderRadius: '8px', 
         fontSize: '16px',
+        backgroundColor: 'rgba(255, 255, 255, 0.1)', // Very light transparent background
+        color: '#ffffff', // White input text
+        transition: 'border-color 0.3s, background-color 0.3s',
+        '::placeholder': { 
+            color: 'rgba(255, 255, 255, 0.7)',
+        },
     },
     passwordContainer: { 
         display: 'flex',
@@ -212,53 +232,80 @@ const styles = {
     },
     passwordInput: {
         flexGrow: 1,
-        padding: '10px',
-        border: '1px solid #ddd',
-        borderRadius: '4px',
+        padding: '12px',
+        border: '1px solid rgba(255, 255, 255, 0.5)',
+        borderRadius: '8px',
         fontSize: '16px',
-        paddingRight: '40px', 
+        paddingRight: '45px', 
+        backgroundColor: 'rgba(255, 255, 255, 0.1)',
+        color: '#ffffff',
+        transition: 'border-color 0.3s, background-color 0.3s',
+        '::placeholder': {
+            color: 'rgba(255, 255, 255, 0.7)',
+        },
     },
+    // Toggle Button Style (adjusted for dark card)
     toggleButton: {
         position: 'absolute',
-        right: '5px',
+        right: '10px',
         top: '50%',
         transform: 'translateY(-50%)',
         backgroundColor: 'transparent',
         border: 'none',
         cursor: 'pointer',
-        fontSize: '18px',
+        fontSize: '1em',
+        color: 'rgba(255, 255, 255, 0.9)', // White icon
         padding: '5px',
         zIndex: 10,
     },
+    // Submit Button Style (adjusted for dark card contrast)
     button: {
-        padding: '12px',
-        backgroundColor: '#4CAF50',
+        padding: '14px', 
+        backgroundColor: 'rgba(40, 167, 69, 0.9)', // Solid green for contrast
         color: 'white',
-        border: 'none',
-        borderRadius: '4px',
+        border: '1px solid rgba(255, 255, 255, 0.6)',
+        borderRadius: '8px',
         cursor: 'pointer',
-        fontSize: '16px',
-        marginTop: '10px',
+        fontSize: '1.1em',
+        fontWeight: 'bold',
+        marginTop: '20px',
+        transition: 'background-color 0.3s, transform 0.1s, border-color 0.3s',
+        ':hover': {
+            backgroundColor: 'rgba(40, 167, 69, 1)', 
+        }
     },
     errorMessage: {
-        color: 'red',
+        color: '#ffdddd', 
+        backgroundColor: 'rgba(220, 53, 69, 0.7)', 
+        padding: '10px',
+        borderRadius: '4px',
         textAlign: 'center',
         marginTop: '15px',
+        border: '1px solid rgba(255, 255, 255, 0.5)',
+        textShadow: '0 1px 2px rgba(0,0,0,0.3)',
     },
     successMessage: {
-        color: 'green',
+        color: '#ddffdd', 
+        backgroundColor: 'rgba(40, 167, 69, 0.7)', 
+        padding: '10px',
+        borderRadius: '4px',
         textAlign: 'center',
         marginTop: '15px',
+        border: '1px solid rgba(255, 255, 255, 0.5)',
+        textShadow: '0 1px 2px rgba(0,0,0,0.3)',
     },
     footer: {
         textAlign: 'center',
-        marginTop: '20px',
-        fontSize: '14px',
+        marginTop: '30px',
+        fontSize: '0.9em',
+        color: '#e9ecef', // Light footer text
+        textShadow: '0 1px 2px rgba(0,0,0,0.3)',
     },
     link: { 
-        color: '#007BFF',
+        color: '#87ceeb', 
         cursor: 'pointer',
-        textDecoration: 'underline',
+        textDecoration: 'none', 
+        fontWeight: '600',
     }
 };
 

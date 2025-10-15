@@ -16,7 +16,7 @@ const DashboardContent = () => {
     const fetchData = useCallback(async () => {
         const { data, error } = await supabase
             .from('inventory')
-            .select('id, brand, description, quantity, price, date_of_import');
+            .select('id, brand, description, quantity, price, price_per_pack, date_of_import');
 
         if (error) {
             console.error("Error fetching inventory:", error);
@@ -52,7 +52,9 @@ const DashboardContent = () => {
             brand: item.brand,
             description: item.description,
             quantity: item.quantity,
-            price: item.price,
+            // Show 0 if null for editing
+            price: item.price || 0.00, 
+            price_per_pack: item.price_per_pack || 0.00, 
             date_of_import: item.date_of_import,
         });
     };
@@ -70,11 +72,32 @@ const DashboardContent = () => {
     const handleSaveEdit = async (id) => {
         setLoading(true);
         
-        if (!editFormData.brand || !editFormData.description || isNaN(parseInt(editFormData.quantity)) || isNaN(parseFloat(editFormData.price))) {
-             alert("Please ensure all fields are correctly filled.");
+        // Validation: Only Brand, Description, and Quantity are required.
+        if (!editFormData.brand || !editFormData.description || isNaN(parseInt(editFormData.quantity))) {
+             alert("Please ensure Brand, Description, and Quantity are correctly filled.");
              setLoading(false);
              return;
         }
+
+        // Prepare Unit Price: convert 0 or NaN to null
+        let newPrice = parseFloat(editFormData.price);
+        if (isNaN(newPrice) || newPrice <= 0) {
+            newPrice = null;
+        }
+
+        // Prepare Pack Price: convert 0 or NaN to null
+        let newPricePerPack = parseFloat(editFormData.price_per_pack);
+        if (isNaN(newPricePerPack) || newPricePerPack <= 0) {
+            newPricePerPack = null;
+        }
+        
+        // CRITICAL VALIDATION: At least one price must be set.
+        if (newPrice === null && newPricePerPack === null) {
+            alert('You must provide a Price (per unit) or a Price (per pack).');
+            setLoading(false);
+            return;
+        }
+
 
         const { error } = await supabase
             .from('inventory')
@@ -82,7 +105,8 @@ const DashboardContent = () => {
                 brand: editFormData.brand,
                 description: editFormData.description,
                 quantity: parseInt(editFormData.quantity), 
-                price: parseFloat(editFormData.price),     
+                price: newPrice,     
+                price_per_pack: newPricePerPack,
                 date_of_import: editFormData.date_of_import,
             })
             .eq('id', id);
@@ -134,21 +158,21 @@ const DashboardContent = () => {
     // Render Table Rows 
     const renderTableRows = () => {
         if (loading && inventory.length === 0) {
-            return <tr><td colSpan="6" style={styles.loadingCell}>Loading inventory...</td></tr>;
+            return <tr><td colSpan="7" style={styles.loadingCell}>Loading inventory...</td></tr>;
         }
         if (filteredInventory.length === 0) {
-            return <tr><td colSpan="6" style={styles.loadingCell}>No inventory items found.</td></tr>;
+            return <tr><td colSpan="7" style={styles.loadingCell}>No inventory items found.</td></tr>;
         }
 
         return filteredInventory.map((item, index) => (
             <tr key={item.id || index} style={styles.tableRow}>
                 {editingId === item.id ? (
                     <>
-                        {/* FIX: Added id attribute to inputs to resolve console warning */}
                         <td style={styles.tableCell}><input id="edit-brand" type="text" name="brand" value={editFormData.brand} onChange={handleEditChange} style={styles.editInput} /></td>
                         <td style={styles.tableCell}><input id="edit-description" type="text" name="description" value={editFormData.description} onChange={handleEditChange} style={styles.editInput} /></td>
                         <td style={styles.tableCell}><input id="edit-quantity" type="number" name="quantity" value={editFormData.quantity} onChange={handleEditChange} style={styles.editInput} /></td>
-                        <td style={styles.tableCell}>₱<input id="edit-price" type="number" name="price" value={editFormData.price} onChange={handleEditChange} step="0.01" style={styles.editInput} /></td>
+                        <td style={styles.tableCell}>₱<input id="edit-price" type="number" name="price" value={editFormData.price} onChange={handleEditChange} min="0" step="0.01" style={styles.editInput} /></td>
+                        <td style={styles.tableCell}>₱<input id="edit-price-pack" type="number" name="price_per_pack" value={editFormData.price_per_pack} onChange={handleEditChange} min="0" step="0.01" style={styles.editInput} /></td>
                         <td style={styles.tableCell}><input id="edit-date" type="date" name="date_of_import" value={editFormData.date_of_import} onChange={handleEditChange} style={styles.editInput} /></td>
                         <td style={styles.actionCellStyle}>
                             <button onClick={() => handleSaveEdit(item.id)} style={{...styles.actionButton, backgroundColor: '#28a745'}}>Save</button>
@@ -160,7 +184,12 @@ const DashboardContent = () => {
                         <td style={styles.tableCell}>{item.brand}</td>
                         <td style={styles.tableCell}>{item.description}</td>
                         <td style={styles.tableCell}>{item.quantity}</td>
-                        <td style={styles.tableCell}>₱{parseFloat(item.price).toFixed(2)}</td>
+                        <td style={styles.tableCell}>
+                            {item.price ? `₱${parseFloat(item.price).toFixed(2)}` : 'N/A'}
+                        </td>
+                        <td style={styles.tableCell}>
+                            {item.price_per_pack ? `₱${parseFloat(item.price_per_pack).toFixed(2)}` : 'N/A'}
+                        </td>
                         <td style={styles.tableCell}>{new Date(item.date_of_import).toLocaleDateString()}</td>
                         <td style={styles.actionCellStyle}>
                             <button onClick={() => handleEditClick(item)} style={{...styles.actionButton, backgroundColor: '#007bff'}}>Edit</button>
@@ -193,7 +222,8 @@ const DashboardContent = () => {
                             <th style={styles.tableHeader}>Brand</th>
                             <th style={styles.tableHeader}>Description</th>
                             <th style={styles.tableHeader}>Quantity</th>
-                            <th style={styles.tableHeader}>Price</th>
+                            <th style={styles.tableHeader}>Price (Unit)</th>
+                            <th style={styles.tableHeader}>Price (Pack)</th>
                             <th style={styles.tableHeader}>Date of Import</th>
                             <th style={styles.actionHeaderStyle}>Actions</th> 
                         </tr>

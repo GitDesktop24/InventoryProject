@@ -1,6 +1,6 @@
 // src/Login.jsx
 
-import { useState } from 'react'; // 👈 REMOVED useEffect
+import { useState } from 'react';
 import { supabase } from './supabaseClient'; 
 import { Link, useNavigate } from 'react-router-dom';
 
@@ -15,10 +15,8 @@ function Login() {
   
   const navigate = useNavigate();
 
-  // --- NAVIGATION GUARD LOGIC REMOVED ---
-  // The logic is now in AuthGuard.jsx
+  // --- LOGIC (UNCHANGED) ---
 
-  // --- Sign In Logic (UNCHANGED) ---
   const handleSignIn = async (e) => {
     e.preventDefault();
     setMessage('');
@@ -59,7 +57,6 @@ function Login() {
     }
   };
 
-  // --- Forgot Password Logic (UNCHANGED) ---
   const handlePasswordReset = async (e) => {
     e.preventDefault();
     setMessage('');
@@ -79,7 +76,6 @@ function Login() {
     setLoading(false);
   };
   
-  // Toggle function (UNCHANGED)
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
   };
@@ -125,7 +121,7 @@ function Login() {
         {loading ? 'Logging In...' : 'Log In'}
       </button>
 
-      <p style={styles.link} onClick={() => {
+      <p style={{...styles.link, textAlign: 'right', marginTop: '10px'}} onClick={() => {
         setForgotPasswordMode(true);
         setError('');
         setMessage('');
@@ -133,7 +129,7 @@ function Login() {
         Forgot Password?
       </p>
       
-      <p style={{...styles.link, marginTop: '20px', textDecoration: 'none'}}>
+      <p style={{...styles.link, marginTop: '20px', textDecoration: 'none', textAlign: 'center'}}>
         <Link to="/signup" style={styles.link}>
             Need an account? Sign Up
         </Link>
@@ -162,7 +158,7 @@ function Login() {
         {loading ? 'Sending Link...' : 'Send Reset Email'}
       </button>
 
-      <p style={styles.link} onClick={() => {
+      <p style={{...styles.link, textAlign: 'center', marginTop: '20px'}} onClick={() => {
         setForgotPasswordMode(false);
         setError('');
         setMessage('');
@@ -175,8 +171,11 @@ function Login() {
   return (
     <div style={styles.container}>
       <h2 style={styles.header}>
-        {forgotPasswordMode ? 'Reset Password' : 'Please Log In Your Account'}
+        {forgotPasswordMode ? 'Reset Password' : 'Welcome Back'}
       </h2>
+      <p style={styles.subtitle}>
+        {forgotPasswordMode ? 'Enter your email' : 'Please log in to your account.'}
+      </p>
       
       {error && <p style={styles.errorMessage}>❌ {error}</p>}
       {message && <p style={styles.successMessage}>✅ {message}</p>}
@@ -186,37 +185,67 @@ function Login() {
   );
 }
 
-// Styles (UNCHANGED)
+// UPDATED STYLES FOR DARK GLASSPMORPHISM + MESH TEXTURE
 const styles = {
     container: {
         maxWidth: '400px',
-        margin: '50px auto',
-        padding: '20px',
-        border: '1px solid #ccc',
-        borderRadius: '8px',
-        boxShadow: '0 4px 8px rgba(0,0,0,0.1)',
-        backgroundColor: '#fff',
+        margin: '50px auto', 
+        padding: '30px', 
+        borderRadius: '16px', 
+        // Glassmorphism effects - DARK
+        backgroundColor: 'rgba(0, 0, 0, 0.4)', // Dark transparent background
+        border: '1px solid rgba(255, 255, 255, 0.5)', // Light border
+        backdropFilter: 'blur(10px)', 
+        boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.6)', 
+        
+        // Mesh Texture (Subtle white grid on dark card)
+        backgroundImage: `
+            repeating-linear-gradient(0deg, rgba(255,255,255,0.1) 0px, rgba(255,255,255,0.1) 1px, transparent 1px, transparent 10px),
+            repeating-linear-gradient(90deg, rgba(255,255,255,0.1) 0px, rgba(255,255,255,0.1) 1px, transparent 1px, transparent 10px)
+        `,
+        backgroundSize: '10px 10px', 
+        
+        color: '#f0f0f0', 
     },
     header: {
         textAlign: 'center',
-        color: '#333',
+        color: '#ffffff', // White header
+        marginBottom: '5px',
+        fontSize: '1.8em',
+        textShadow: '0 1px 3px rgba(0,0,0,0.4)',
+    },
+    subtitle: {
+        textAlign: 'center',
+        color: '#e9ecef', // Light subtitle
+        marginBottom: '20px',
+        fontSize: '1em',
+        textShadow: '0 1px 2px rgba(0,0,0,0.3)',
     },
     form: {
         display: 'flex',
         flexDirection: 'column',
     },
     label: {
-        marginBottom: '5px',
-        fontWeight: 'bold',
-        color: '#555',
-        marginTop: '10px',
+        marginBottom: '8px',
+        fontWeight: '600', 
+        color: '#f8f9fa', // Light gray label
+        marginTop: '15px',
+        fontSize: '0.9em',
+        textShadow: '0 1px 2px rgba(0,0,0,0.3)',
     },
+    // Input Field Style (adjusted for dark card)
     input: {
-        padding: '10px',
+        padding: '12px', 
         marginBottom: '15px',
-        border: '1px solid #ddd',
-        borderRadius: '4px',
+        border: '1px solid rgba(255, 255, 255, 0.5)', 
+        borderRadius: '8px', 
         fontSize: '16px',
+        backgroundColor: 'rgba(255, 255, 255, 0.1)', 
+        color: '#ffffff', 
+        transition: 'border-color 0.3s, background-color 0.3s',
+        '::placeholder': { 
+            color: 'rgba(255, 255, 255, 0.7)',
+        },
     },
     passwordContainer: { 
         display: 'flex',
@@ -225,56 +254,87 @@ const styles = {
     },
     passwordInput: {
         flexGrow: 1,
-        padding: '10px',
-        border: '1px solid #ddd',
-        borderRadius: '4px',
+        padding: '12px',
+        border: '1px solid rgba(255, 255, 255, 0.5)',
+        borderRadius: '8px',
         fontSize: '16px',
-        paddingRight: '40px',
+        paddingRight: '45px', 
+        backgroundColor: 'rgba(255, 255, 255, 0.1)',
+        color: '#ffffff',
+        transition: 'border-color 0.3s, background-color 0.3s',
+        '::placeholder': {
+            color: 'rgba(255, 255, 255, 0.7)',
+        },
     },
+    // Toggle Button Style (adjusted for dark card)
     toggleButton: {
         position: 'absolute',
-        right: '5px',
+        right: '10px',
         top: '50%',
         transform: 'translateY(-50%)',
         backgroundColor: 'transparent',
         border: 'none',
         cursor: 'pointer',
-        fontSize: '18px',
+        fontSize: '1em',
+        color: 'rgba(255, 255, 255, 0.9)', 
         padding: '5px',
         zIndex: 10,
     },
+    // Submit Button Style (adjusted for dark card contrast)
     button: {
-        padding: '12px',
-        backgroundColor: '#007BFF',
+        padding: '14px', 
+        backgroundColor: 'rgba(0, 123, 255, 0.9)', // Solid blue for contrast
         color: 'white',
-        border: 'none',
-        borderRadius: '4px',
+        border: '1px solid rgba(255, 255, 255, 0.6)',
+        borderRadius: '8px',
         cursor: 'pointer',
-        fontSize: '16px',
-        marginTop: '10px',
+        fontSize: '1.1em',
+        fontWeight: 'bold',
+        marginTop: '20px',
+        transition: 'background-color 0.3s, transform 0.1s, border-color 0.3s',
+        ':hover': {
+            backgroundColor: 'rgba(0, 123, 255, 1)',
+        }
     },
     errorMessage: {
-        color: 'red',
+        color: '#ffdddd', 
+        backgroundColor: 'rgba(220, 53, 69, 0.7)', 
+        padding: '10px',
+        borderRadius: '4px',
         textAlign: 'center',
         marginTop: '15px',
+        border: '1px solid rgba(255, 255, 255, 0.5)',
+        textShadow: '0 1px 2px rgba(0,0,0,0.3)',
     },
     successMessage: {
-        color: 'green',
+        color: '#ddffdd', 
+        backgroundColor: 'rgba(40, 167, 69, 0.7)', 
+        padding: '10px',
+        borderRadius: '4px',
         textAlign: 'center',
         marginTop: '15px',
+        border: '1px solid rgba(255, 255, 255, 0.5)',
+        textShadow: '0 1px 2px rgba(0,0,0,0.3)',
     },
     link: {
-        textAlign: 'center',
-        marginTop: '10px',
-        color: '#007BFF',
+        display: 'block',
+        color: '#87ceeb', // Light blue link
         cursor: 'pointer',
-        textDecoration: 'underline',
+        textDecoration: 'none', 
+        fontWeight: '600',
+        fontSize: '0.9em',
+        textShadow: '0 1px 2px rgba(0,0,0,0.3)',
+        ':hover': {
+            textDecoration: 'underline',
+        }
     },
     resetInfo: {
         fontSize: '0.9em',
-        color: '#666',
+        color: '#e9ecef',
         textAlign: 'center',
         marginBottom: '15px',
+        padding: '0 10px',
+        textShadow: '0 1px 2px rgba(0,0,0,0.3)',
     }
 };
 
