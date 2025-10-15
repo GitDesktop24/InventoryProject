@@ -20,11 +20,11 @@ function Login() {
       // 1. Use the Vercel-provided public URL if available (Production/Deployment)
       if (import.meta.env.VITE_PUBLIC_VERCEL_URL) {
           // Vercel app URL (e.g., https://inventory-project-vert-vert.vercel.app)
-          return `https://${import.meta.env.VITE_PUBLIC_VERCEL_URL}/#/update-password`;
+          return `https://${import.meta.env.VITE_PUBLIC_VERCEL_URL}/update-password`;
       }
       
       // 2. Fallback to runtime origin (Local Development)
-      return `${window.location.origin}/#/update-password`;
+      return `${window.location.origin}/update-password`;
   }
 
   // --- LOGIC (UNCHANGED) ---
