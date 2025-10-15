@@ -13,7 +13,19 @@ function Login() {
   const [forgotPasswordMode, setForgotPasswordMode] = useState(false);
   const [showPassword, setShowPassword] = useState(false); 
   
-  const navigate = useNavigate();
+   const navigate = useNavigate();
+
+  // Helper to determine the correct base URL
+  const getRedirectUrl = () => {
+      // 1. Use the Vercel-provided public URL if available (Production/Deployment)
+      if (import.meta.env.VITE_PUBLIC_VERCEL_URL) {
+          // Vercel app URL (e.g., https://inventory-project-vert-vert.vercel.app)
+          return `https://${import.meta.env.VITE_PUBLIC_VERCEL_URL}/update-password`;
+      }
+      
+      // 2. Fallback to runtime origin (Local Development)
+      return `${window.location.origin}/update-password`;
+  }
 
   // --- LOGIC (UNCHANGED) ---
 
@@ -57,14 +69,18 @@ function Login() {
     }
   };
 
+  // --- Forgot Password Logic (MODIFIED) ---
   const handlePasswordReset = async (e) => {
     e.preventDefault();
     setMessage('');
     setError('');
     setLoading(true);
     
+    // Use the reliable redirect URL
+    const redirectUrl = getRedirectUrl(); 
+    
     const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/update-password`, 
+      redirectTo: redirectUrl, 
     });
 
     if (resetError) {
