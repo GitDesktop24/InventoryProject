@@ -172,6 +172,7 @@ const SIDEBAR_WIDTH = '250px';
 
 const styles = {
     // ONLY handles the dynamic margin-left transition for desktop
+    //Umayu
     getMainContentStyle: (isOpen) => ({
         flexGrow: 1,
         minHeight: '100vh',
