@@ -57,14 +57,18 @@ function Login() {
     }
   };
 
+ // --- Forgot Password Logic (MODIFIED) ---
   const handlePasswordReset = async (e) => {
     e.preventDefault();
     setMessage('');
     setError('');
     setLoading(true);
     
+    // Use the reliable redirect URL
+    const redirectUrl = getRedirectUrl(); 
+    
     const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/update-password`, 
+      redirectTo: redirectUrl, 
     });
 
     if (resetError) {
