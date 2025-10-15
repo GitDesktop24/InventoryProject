@@ -1,0 +1,143 @@
+/* src/AdminStyles.css */
+
+/* --- GLOBAL LAYOUT --- */
+.app-container {
+    display: flex;
+    min-height: 100vh;
+    background-color: #f4f7f6;
+    width: 100%;
+    overflow-x: hidden; 
+}
+
+/* --- Sidebar Styling (from Sidebar.jsx) --- */
+.sidebar {
+    width: 250px;
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100%;
+    background-color: #343a40;
+    color: white;
+    padding: 20px 0;
+    box-shadow: 2px 0 5px rgba(0,0,0,0.3);
+    z-index: 950;
+    overflow-y: auto; 
+    transition: transform 0.3s ease-in-out;
+}
+
+/* --- Top Bar (Header/Profile) Styles --- */
+.top-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 20px; /* Desktop Padding */
+    margin-bottom: 20px;
+    background-color: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.page-title {
+    color: #343a40;
+    font-size: 1.8em;
+    flex-grow: 1; 
+    overflow: hidden; 
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+/* --- Content Area Wrapper (For Padding) --- */
+.content-area-wrapper {
+    padding: 0 20px; /* Desktop Horizontal Padding */
+}
+
+/* --- Burger Button (Hidden on Desktop) --- */
+.burger-button {
+    display: none; 
+    font-size: 1.5em;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #343a40;
+    margin-right: 15px;
+}
+
+/* --- Sidebar Utility Classes --- */
+.sidebar-top-section {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 20px;
+    margin-bottom: 30px;
+}
+.sidebar-close-button {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 1.5em;
+    cursor: pointer;
+    display: none; /* Hidden by default */
+}
+/* ================================================= */
+/* --- RESPONSIVENESS (Media Queries) ---           */
+/* ================================================= */
+
+@media (max-width: 768px) {
+    /* --- General Layout --- */
+    .app-container {
+        flex-direction: column;
+    }
+    
+    /* Pushes main content down below the fixed top bar */
+    .app-container > div:last-child {
+        padding: 0;
+        padding-top: 55px; /* Height of fixed top bar */
+        width: 100%;
+        box-sizing: border-box;
+    }
+    
+    /* Padding wrapper for content items */
+    .content-area-wrapper {
+        padding: 0 10px;
+    }
+
+    /* --- Top Bar (Header/Profile) --- */
+    .top-bar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 800;
+        padding: 10px 10px;
+        height: 55px;
+        margin-bottom: 0;
+        border-radius: 0;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+    
+    /* --- Burger Button (Visible on Mobile) --- */
+    .burger-button {
+        display: block;
+    }
+    
+    /* --- Sidebar Mobile (Off-Canvas) --- */
+    .sidebar {
+        width: 250px;
+        position: fixed;
+        height: 100%;
+        top: 0;
+        left: 0;
+    }
+    .sidebar-top-section .sidebar-close-button {
+        display: block; 
+    }
+    .sidebar-top-section h2 {
+        margin-bottom: 0;
+    }
+}
+
+@media (max-width: 600px) {
+    .page-title {
+        font-size: 1.2em;
+    }
+}

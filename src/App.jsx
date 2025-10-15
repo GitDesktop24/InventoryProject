@@ -1,33 +1,51 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+// src/App.jsx
+
+import { Routes, Route, Navigate } from 'react-router-dom' 
+import { SpeedInsights } from '@vercel/speed-insights/react'; // 👈 IMPORT SpeedInsights
+import SignUp from './SignUp.jsx' 
+import Login from './Login.jsx' 
+import UpdatePassword from './UpdatePassword.jsx' 
+import AdminPage from './AdminPage.jsx'; 
+import MainPage from './MainPage.jsx';     
+import AuthGuard from './AuthGuard.jsx'; 
 
 function App() {
-  const [count, setCount] = useState(0)
-
+  
   return (
     <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
+      <div style={{ textAlign: 'center', marginBottom: '20px' }}>
+        <h2>Welcome Users</h2>
       </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
+
+      <Routes>
+        {/* Default route redirects to /login */}
+        <Route path="/" element={<Navigate to="/login" replace />} />
+        
+        {/* AUTHENTICATION ROUTES - Protected by AuthGuard */}
+        {/* AuthGuard prevents logged-in users from seeing the login/signup pages */}
+        <Route 
+          path="/login" 
+          element={<AuthGuard><Login /></AuthGuard>} 
+        />
+        
+        <Route 
+          path="/signup" 
+          element={<AuthGuard><SignUp /></AuthGuard>} 
+        />
+
+        {/* PASSWORD RESET ROUTE */}
+        <Route path="/update-password" element={<UpdatePassword />} />
+        
+        {/* PROTECTED DASHBOARD ROUTES */}
+        <Route path="/admin" element={<AdminPage />} /> 
+        <Route path="/main" element={<MainPage />} />
+        
+        {/* Optional 404 Route */}
+        {/* <Route path="*" element={<div>404 Not Found</div>} /> */}
+      </Routes>
+
+      {/* Vercel Speed Insights Integration */}
+      <SpeedInsights /> 
     </>
   )
 }
