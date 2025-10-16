@@ -15,28 +15,25 @@ import backgroundImage from './assets/asset1.jpg';
 function App() {
   
   return (
-    // MODIFIED: Apply the image background to the highest level wrapper
     <div style={styles.appWrapper}>
       <Routes>
-        {/* Default route redirects to /login */}
         <Route path="/" element={<Navigate to="/login" replace />} />
         
-        {/* AUTHENTICATION ROUTES - Protected by AuthGuard */}
-        {/* AuthGuard prevents logged-in users from seeing the login/signup pages */}
+        {/* CORRECTED: REMOVE AuthGuard from /login and /signup */}
         <Route 
           path="/login" 
-          element={<AuthGuard><Login /></AuthGuard>} 
+          element={<Login />} // NO AuthGuard needed here
         />
         
         <Route 
           path="/signup" 
-          element={<AuthGuard><SignUp /></AuthGuard>} 
+          element={<SignUp />} // NO AuthGuard needed here
         />
 
-        {/* PASSWORD RESET ROUTE */}
+        {/* PASSWORD RESET ROUTE - This is already correct and unguarded */}
         <Route path="/update-password" element={<UpdatePassword />} />
         
-        {/* PROTECTED DASHBOARD ROUTES */}
+        {/* PROTECTED DASHBOARD ROUTES - Keep AuthGuard logic here (implied by AdminPage/MainPage logic) */}
         <Route path="/admin" element={<AdminPage />} /> 
         <Route path="/main" element={<MainPage />} />
         
