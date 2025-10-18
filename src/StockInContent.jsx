@@ -17,7 +17,15 @@ const StockInContent = ({ onImportSuccess }) => {
 
     const handleChange = (e) => {
         const { name, value } = e.target;
-        setFormData(prev => ({ ...prev, [name]: value }));
+        
+        // FIX 1: Treat empty strings from numeric inputs as '0' in state
+        let newValue = value;
+        if (name === 'quantity' || name === 'price' || name === 'price_per_pack') {
+            // If the user clears the field, store '0' in state, not ""
+            newValue = value === '' ? '0' : value; 
+        }
+        
+        setFormData(prev => ({ ...prev, [name]: newValue }));
     };
 
     const handleSubmit = async (e) => {
@@ -27,73 +35,107 @@ const StockInContent = ({ onImportSuccess }) => {
 
         const newQuantity = parseInt(formData.quantity);
         
-        // Handle optional prices: convert 0 or NaN to null for the database
-        let newPrice = parseFloat(formData.price);
-        if (isNaN(newPrice) || newPrice <= 0) {
-            newPrice = null;
-        }
-
-        let newPricePerPack = parseFloat(formData.price_per_pack);
-        if (isNaN(newPricePerPack) || newPricePerPack <= 0) {
-            newPricePerPack = null;
-        }
-
+        // Helper function to correctly convert input value to a number or JS null.
+        const parsePrice = (value) => {
+            const parsed = parseFloat(value);
+            // Returns JS null if NaN or less than or equal to 0, otherwise returns the number
+            return (isNaN(parsed) || parsed <= 0) ? null : parsed;
+        };
+        
+        // Calculate the values to be sent to Supabase
+        const dbPrice = parsePrice(formData.price);
+        const dbPricePerPack = parsePrice(formData.price_per_pack);
+        
         const importDate = formData.date_of_import;
         
-        // CRITICAL VALIDATION: Quantity must be > 0 AND at least ONE price must be set.
+        // CRITICAL VALIDATION 
         if (newQuantity <= 0) {
             setMessage({ type: 'error', text: 'Quantity must be greater than zero.' });
             setLoading(false);
             return;
         }
-        if (newPrice === null && newPricePerPack === null) {
+        if (dbPrice === null && dbPricePerPack === null) {
             setMessage({ type: 'error', text: 'You must provide a Price (per unit) or a Price (per pack).' });
             setLoading(false);
             return;
         }
         
+        // --- PREPARE PAYLOAD OBJECT ---
+        // This ensures no "null" value is passed if the input is meant to be optional, 
+        // preventing the stringification bug.
+        const preparePayload = (price, pricePerPack) => {
+            const payload = {
+                brand: formData.brand,
+                description: formData.description,
+                quantity: newQuantity,
+                date_of_import: importDate,
+            };
+
+            if (price !== null) {
+                payload.price = price;
+            }
+            if (pricePerPack !== null) {
+                payload.price_per_pack = pricePerPack;
+            }
+            return payload;
+        };
+        
         try {
-            // 1. Search for existing item with matching Brand, Description, and Price (Unit Price)
-            // Only search for a match if unit price is provided (null price won't match/merge)
-            const { data: existingItems, error: searchError } = await supabase
+            // 2. Search for existing item with matching Brand, Description, and Price (Unit Price)
+            let query = supabase
                 .from('inventory')
                 .select('id, quantity')
                 .eq('brand', formData.brand)
                 .eq('description', formData.description)
-                .eq('price', newPrice) 
                 .limit(1);
+
+            // FIX A: Conditional price check using 'is' for null and 'eq' for numbers
+            if (dbPrice === null) {
+                // Use 'is' operator for checking NULL values in the database
+                query = query.is('price', null); 
+            } else {
+                // Use 'eq' operator for checking explicit numeric values
+                query = query.eq('price', dbPrice);
+            }
+
+            const { data: existingItems, error: searchError } = await query;
 
             if (searchError) throw searchError;
 
-            if (existingItems && existingItems.length > 0 && newPrice !== null) {
-                // --- 2. UPDATE LOGIC (Merge if item exists AND unit price is set) ---
+            // Decision: Merge ONLY if an item is found AND a unit price was provided (dbPrice !== null)
+            if (existingItems && existingItems.length > 0 && dbPrice !== null) {
+                // --- 3. UPDATE LOGIC (Merge) ---
                 const existingItem = existingItems[0];
                 const updatedQuantity = existingItem.quantity + newQuantity;
+                
+                // Prepare update payload for only the fields that change
+                const updatePayload = {
+                    quantity: updatedQuantity,
+                    date_of_import: importDate, 
+                };
+
+                // Add price_per_pack ONLY if it's explicitly set (dbPricePerPack !== null)
+                if (dbPricePerPack !== null) {
+                    updatePayload.price_per_pack = dbPricePerPack;
+                }
 
                 const { error: updateError } = await supabase
                     .from('inventory')
-                    .update({ 
-                        quantity: updatedQuantity,
-                        date_of_import: importDate, 
-                        price_per_pack: newPricePerPack, 
-                    })
+                    .update(updatePayload) // Use the filtered updatePayload
                     .eq('id', existingItem.id);
 
                 if (updateError) throw updateError;
 
                 setMessage({ type: 'success', text: `Stock merged successfully! New quantity: ${updatedQuantity}` });
             } else {
-                // --- 3. INSERT LOGIC (If no match found OR if unit price is null) ---
+                // --- 4. INSERT LOGIC (New Item) ---
+                
+                // Prepare the filtered insert payload
+                const insertPayload = preparePayload(dbPrice, dbPricePerPack);
+                
                 const { error: insertError } = await supabase
                     .from('inventory')
-                    .insert([{
-                        brand: formData.brand,
-                        description: formData.description,
-                        quantity: newQuantity,
-                        price: newPrice, 
-                        price_per_pack: newPricePerPack, 
-                        date_of_import: importDate,
-                    }]);
+                    .insert([insertPayload]); // Use the filtered insertPayload
                 
                 if (insertError) throw insertError;
 
@@ -147,7 +189,8 @@ const StockInContent = ({ onImportSuccess }) => {
                     <input 
                         type="number" 
                         name="price" 
-                        value={formData.price} 
+                        // FIX 2: If state value is 0 or '0', display empty string 
+                        value={formData.price === 0 || formData.price === '0' ? '' : formData.price} 
                         onChange={handleChange} 
                         min="0" 
                         step="0.01" 
@@ -162,8 +205,9 @@ const StockInContent = ({ onImportSuccess }) => {
                     <input 
                         type="number" 
                         name="price_per_pack" 
-                        value={formData.price_per_pack} 
-                        onChange={handleChange} 
+                        // FIX 2: If state value is 0 or '0', display empty string
+                        value={formData.price_per_pack === 0 || formData.price_per_pack === '0' ? '' : formData.price_per_pack} 
+                        onChange={handleChange}
                         min="0" 
                         step="0.01" 
                         style={styles.input} 
